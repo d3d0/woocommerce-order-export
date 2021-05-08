@@ -1,0 +1,23 @@
+{
+  "name": "woocommerce-order-export",
+  "version": "1.0.0",
+  "description": "Export woocommerce orders",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "scss": "node-sass --watch assets/scss --output assets/css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d3d0/woocommerce-order-export.git"
+  },
+  "author": "d3d0",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/d3d0/woocommerce-order-export/issues"
+  },
+  "homepage": "https://github.com/d3d0/woocommerce-order-export#readme",
+  "dependencies": {
+    "node-sass": "^5.0.0"
+  }
+}

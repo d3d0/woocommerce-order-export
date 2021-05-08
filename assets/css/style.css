@@ -1,0 +1,16 @@
+/******************************************
+ NOTE: woocommerce default classes
+ ******************************************/
+.woocommerce ul.products li.product {
+  line-height: 1 !important; }
+  .woocommerce ul.products li.product.small_product {
+    /* small_product */ }
+  .woocommerce ul.products li.product.big_product {
+    /* big_product */ }
+
+/******************************************
+ NOTE: media queries
+ ******************************************/
+/* Extra large devices (large desktops, 1200px and up) */
+/* Large devices (desktops, 992px and up) */
+/* Large devices (desktops, 992px and up) */

@@ -1,0 +1,41 @@
+$black: #000000;
+$white: #FFFFFF;
+$gray: #A2A2A2;
+$light-gray: #C7C8CA;
+$lighter-gray: #EDEDED;
+$lightest-gray: #FBFBFB;
+
+/******************************************
+ NOTE: woocommerce default classes
+ ******************************************/
+
+.woocommerce ul.products li.product {
+  line-height: 1 !important;
+  &.small_product {
+    /* small_product */
+  }
+  &.big_product {
+    /* big_product */
+  }
+}
+
+/******************************************
+ NOTE: media queries
+ ******************************************/
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media only screen and (max-width: 1200px) {
+  
+}
+/* Large devices (desktops, 992px and up) */
+@media only screen and (max-width: 992px) {
+  
+}
+/* Large devices (desktops, 992px and up) */
+@media only screen and (max-width: 768px) {
+  
+}
+// 992px or less
+@media only screen and (max-width:667px) {
+  
+}
