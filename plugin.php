@@ -26,11 +26,73 @@ function wporg_options_page_html() {
   if ( ! current_user_can( 'manage_options' ) ) {
       return;
   }
+
+  
+
+  
+  $orders = wc_get_orders( array('numberposts' => -1) );
   ?>
   <div class="wrap">
-      <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-      <br>
+      <h1><?php echo esc_html( get_admin_page_title() ); ?></h1><br>
+      
       <a href="<?php echo admin_url( 'admin.php?page=woocommerce-order-export' ) ?>&action=download_csv&_wpnonce=<?php echo wp_create_nonce( 'download_csv' )?>" class="page-title-action"><?php _e('Export to CSV','woocommerce-order-export');?></a>
+      
+      <br><br>
+
+      <table class="widefat fixed" cellspacing="0">
+      <thead>
+        <tr>
+            <th id="columnname" class="manage-column column-columnname " scope="col">N° ordine</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Stato</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Totale</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Email</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Nome</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Cognome</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Indirizzo 1</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Indirizzo 2</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">CAP</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Provincia</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Stato</th>
+            <th id="columnname" class="manage-column column-columnname " scope="col">Telefono</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php
+        foreach( $orders as $order ){
+            //var_dump($order);
+            //echo $order->get_id() . '<br>'; // The order ID
+            //echo $order->get_status() . '<br>'; // The order status
+            //echo $order->get_total() . '<br>'; // The order status
+            //echo $order->get_billing_email();
+            //echo $order->get_billing_first_name();
+            //echo $order->get_billing_last_name();
+            //echo $order->get_billing_address_1();
+            //echo $order->get_billing_address_2();
+            //echo $order->get_billing_postcode();
+            //echo $order->get_billing_state();
+            //echo $order->get_billing_country();
+            //echo $order->get_billing_phone();
+            ?>
+            <tr valign="top">
+              <th class="column-columnname " scope="row"><?php echo $order->get_id(); ?></th>
+              <td class="column-columnname "><?php echo $order->get_status(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_total(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_email(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_first_name(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_last_name(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_address_1(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_address_2(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_postcode(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_state(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_country(); ?></td>
+              <td class="column-columnname "><?php echo $order->get_billing_phone(); ?></td>
+            </tr>
+        <?php
+        }
+        ?>
+        </tbody>
+      </table>
+
       <form action="options.php" method="post">
           <?php
           // output security fields for the registered setting "wporg_options"
