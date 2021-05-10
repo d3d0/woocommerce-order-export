@@ -12,6 +12,43 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+// @email - Email address of the receiver
+// @subject - Subject of the email
+// @heading - Heading to place inside of the woocommerce template
+// @message - Body content (can be HTML)
+function send_email_woocommerce_style($email, $subject, $heading, $message) {
+  
+  $attachments = array( WP_CONTENT_DIR . '/debug.lor' );
+  
+  $headers = array(
+    'Content-Type: text/html; charset=UTF-8',
+    'From: Person Name <email@here.com>'
+  );
+  
+  // Get woocommerce mailer from instance
+  $mailer = WC()->mailer();
+
+  // Wrap message using woocommerce html email template
+  $wrapped_message = $mailer->wrap_message($heading, $message);
+
+  // Create new WC_Email instance
+  $wc_email = new WC_Email;
+
+  // Style the wrapped message with woocommerce inline styles
+  $html_message = $wc_email->style_inline($wrapped_message);
+
+  // Send the email using wordpress mail function
+  wp_mail( $email, $subject, $html_message, $headers, $attachments );
+
+}
+
+add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
+function create_order_and_send_email ($order_id) {
+    // your code
+    error_log('Ordine creato > '.$order_id);
+    send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine Premiata Officina Lugaresi', 'Testata', 'Messaggio');
+}
+
 add_action('admin_menu', 'myplugin_register_options_page');
 function myplugin_register_options_page() {
   add_options_page(
@@ -21,16 +58,16 @@ function myplugin_register_options_page() {
     'woocommerce-order-export', 
     'wporg_options_page_html');
 }
+
 function wporg_options_page_html() {
+
   // check user capabilities
   if ( ! current_user_can( 'manage_options' ) ) {
       return;
   }
-
-  
-
-  
+  // orders query
   $orders = wc_get_orders( array('numberposts' => -1) );
+
   ?>
   <div class="wrap">
       <h1><?php echo esc_html( get_admin_page_title() ); ?></h1><br>
@@ -63,15 +100,6 @@ function wporg_options_page_html() {
             //echo $order->get_id() . '<br>'; // The order ID
             //echo $order->get_status() . '<br>'; // The order status
             //echo $order->get_total() . '<br>'; // The order status
-            //echo $order->get_billing_email();
-            //echo $order->get_billing_first_name();
-            //echo $order->get_billing_last_name();
-            //echo $order->get_billing_address_1();
-            //echo $order->get_billing_address_2();
-            //echo $order->get_billing_postcode();
-            //echo $order->get_billing_state();
-            //echo $order->get_billing_country();
-            //echo $order->get_billing_phone();
             ?>
             <tr valign="top">
               <th class="column-columnname " scope="row"><?php echo $order->get_id(); ?></th>
