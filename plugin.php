@@ -12,13 +12,25 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+// -----------------------------------------
+// CREATE ORDER
+// -----------------------------------------
+
+add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
+
+function create_order_and_send_email ($order_id) {
+    // your code
+    error_log('Ordine creato > '.$order_id);
+    send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine Premiata Officina Lugaresi', 'Testata', 'Messaggio');
+}
+
 // @email - Email address of the receiver
 // @subject - Subject of the email
 // @heading - Heading to place inside of the woocommerce template
 // @message - Body content (can be HTML)
 function send_email_woocommerce_style($email, $subject, $heading, $message) {
   
-  $attachments = array( WP_CONTENT_DIR . '/debug.lor' );
+  $attachments = array( WP_CONTENT_DIR . '/debug.log' );
   
   $headers = array(
     'Content-Type: text/html; charset=UTF-8',
@@ -42,14 +54,12 @@ function send_email_woocommerce_style($email, $subject, $heading, $message) {
 
 }
 
-add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
-function create_order_and_send_email ($order_id) {
-    // your code
-    error_log('Ordine creato > '.$order_id);
-    send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine Premiata Officina Lugaresi', 'Testata', 'Messaggio');
-}
+// -----------------------------------------
+// SETTING PAGE
+// -----------------------------------------
 
 add_action('admin_menu', 'myplugin_register_options_page');
+
 function myplugin_register_options_page() {
   add_options_page(
     'Woocommerce Order Export Settings', 
@@ -136,11 +146,21 @@ function wporg_options_page_html() {
   <?php
 }
 
+// -----------------------------------------
+// CSV EXPORT
+// -----------------------------------------
+
 if ( isset($_GET['action'] ) && $_GET['action'] == 'download_csv' )  {
 	add_action( 'admin_init', 'csv_export');
 }
 
 function csv_export() {
+
+    // Send mail
+    $to="lorenzo.dedonato@gmail.com";
+    $subject="Test";
+    $body="This is test mail";
+    wp_mail( $to, $subject, $body, $headers );
 
     // Check for current user privileges 
     if( !current_user_can( 'manage_options' ) ){ return false; }
@@ -193,7 +213,12 @@ function csv_export() {
     die();
 }
 
+// -----------------------------------------
+// INIT PLUGIN
+// -----------------------------------------
+
 add_action('init','plugin_init');
+
 function plugin_init(){
 
   if (class_exists("Woocommerce")) {
