@@ -21,7 +21,7 @@ add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
 function create_order_and_send_email ($order_id) {
     // your code
     error_log('Ordine creato > '.$order_id);
-    send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine Premiata Officina Lugaresi', 'Testata', 'Messaggio');
+    send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine POL', 'Testata', 'Messaggio');
 }
 
 // @email - Email address of the receiver
@@ -30,6 +30,7 @@ function create_order_and_send_email ($order_id) {
 // @message - Body content (can be HTML)
 function send_email_woocommerce_style($email, $subject, $heading, $message) {
   
+  // Get file attachments
   $attachments = array( WP_CONTENT_DIR . '/debug.log' );
   
   $headers = array(
@@ -157,10 +158,12 @@ if ( isset($_GET['action'] ) && $_GET['action'] == 'download_csv' )  {
 function csv_export() {
 
     // Send mail
+    /*
     $to="lorenzo.dedonato@gmail.com";
     $subject="Test";
     $body="This is test mail";
     wp_mail( $to, $subject, $body, $headers );
+    */
 
     // Check for current user privileges 
     if( !current_user_can( 'manage_options' ) ){ return false; }
@@ -177,8 +180,9 @@ function csv_export() {
     ob_start();
 
     $domain = $_SERVER['SERVER_NAME'];
+
+    /*
     $filename = 'users-' . $domain . '-' . time() . '.csv';
-    
     $header_row = array(
         'Email',
         'Name'
@@ -207,6 +211,26 @@ function csv_export() {
         fputcsv( $fh, $data_row );
     }
     fclose( $fh );
+    */
+
+    $filename = 'users-' . $domain . '-' . time() . '.txt';
+    $content = "some text here";
+    //$fh = fopen("myText.txt","wb");
+    $fh = @fopen( 'php://output', 'w' );
+    fprintf( $fh, chr(0xEF) . chr(0xBB) . chr(0xBF) );
+    header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
+    header( 'Content-Description: File Transfer' );
+    header( 'Content-type: text/plain' );
+    header( "Content-Disposition: attachment; filename={$filename}" );
+    header( 'Expires: 0' );
+    header( 'Pragma: public' );
+    /*
+    foreach ( $users as $user ) {
+      $content .= $user['user_email'] . ', ';
+    }
+    */
+    fwrite($fh,$content);
+    fclose($fh);
     
     ob_end_flush();
     
