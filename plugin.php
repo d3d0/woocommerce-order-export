@@ -13,29 +13,128 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // -----------------------------------------
+// SEND MAIL FUNCTION
+// -----------------------------------------
+
+// @email   - Email address of the receiver
+// @subject - Subject of the email
+// @heading - Heading to place inside of the woocommerce template
+// @message - Body content (can be HTML)
+function send_email_woocommerce_style($email, $subject, $heading, $message) {
+  
+  // Get file attachments
+  $attachments = array( WP_CONTENT_DIR . '/debug.log' );
+  
+  $headers = array(
+    'Content-Type: text/html; charset=UTF-8',
+    'From: Premiata Officina Lugaresi <email@here.com>'
+  );
+  
+  // Get woocommerce mailer from instance
+  $mailer = WC()->mailer();
+
+  // Wrap message using woocommerce html email template
+  $wrapped_message = $mailer->wrap_message($heading, $message);
+
+  // Create new WC_Email instance
+  $wc_email = new WC_Email;
+
+  // Style the wrapped message with woocommerce inline styles
+  $html_message = $wc_email->style_inline($wrapped_message);
+
+  // Send the email using wordpress mail function
+  wp_mail( $email, $subject, $html_message, $headers, $attachments );
+
+}
+
+// -----------------------------------------
+// THANK YOU > OK!
+// -----------------------------------------
+
+add_action('woocommerce_thankyou', 'enroll_student', 10, 1);
+function enroll_student( $order_id ) {
+    
+    error_log('Thank you page ordine > '.$order_id);
+    csv_txt_save();
+
+    /*
+    if ( ! $order_id )
+        return;
+    
+    // Getting an instance of the order object
+    $order = wc_get_order( $order_id );
+
+    if($order->is_paid())
+        $paid = 'yes';
+    else
+        $paid = 'no';
+
+    // iterating through each order items (getting product ID and the product object / work for simple and variable products)
+    foreach ( $order->get_items() as $item_id => $item ) {
+
+        if( $item['variation_id'] > 0 ){
+            $product_id = $item['variation_id']; // variable product
+        } else {
+            $product_id = $item['product_id']; // simple product
+        }
+
+        // Get the product object
+        $product = wc_get_product( $product_id );
+
+    }
+
+    // Ouptput some data
+    echo '<p>Order ID: '. $order_id . ' — Order Status: ' . $order->get_status() . ' — Order is paid: ' . $paid . '</p>';
+    */
+}
+
+// -----------------------------------------
 // PRE PAYMENT COMPLETE
 // -----------------------------------------
 
 // fired before the order is saved
-//add_action('woocommerce_pre_payment_complete', 'pre_payment_complete', 10, 1);
+add_action('woocommerce_pre_payment_complete', 'pre_payment_complete', 10, 1);
 
 function pre_payment_complete() {
-    // Check for current user privileges 
-    if( !current_user_can( 'manage_options' ) ){ return false; }
+    error_log('Pagamento completato > '.$order_id);
+    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Pagamento Completato POL', 'Testata', 'Messaggio');
+}
 
-    // Check if we are in WP-Admin
-    if( !is_admin() ){ return false; }
+// -----------------------------------------
+// PAYMENT COMPLETE
+// -----------------------------------------
 
-    // Nonce Check
-    // $nonce = isset( $_GET['_wpnonce'] ) ? $_GET['_wpnonce'] : '';
-    // if ( ! wp_verify_nonce( $nonce, 'download_csv' ) ) {
-    //     die( 'Security check error' );
-    // }
+// fired when the payment is completed
+add_action('woocommerce_payment_complete', 'payment_complete', 10, 1);
+
+function payment_complete() {
+    error_log('Pagamento completato > '.$order_id);
+    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Pagamento Completato POL', 'Testata', 'Messaggio');
+}
+
+// -----------------------------------------
+// CREATE ORDER
+// -----------------------------------------
+
+add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
+
+function create_order_and_send_email ($order_id) {
+    error_log('Ordine creato > '.$order_id);
+    //csv_txt_export(); // NO > genera errore ajax!
+    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine POL', 'Testata', 'Messaggio');
+}
+
+// -----------------------------------------
+// CSV TXT SAVE
+// -----------------------------------------
+
+function csv_txt_save() {
+
+    error_log('Inizio esportazione ordine!');
 
     // -----------------------------------------
     // -----------------------------------------
 
-    ob_start();
     $domain = $_SERVER['SERVER_NAME'];
 
     // -----------------------------------------
@@ -108,73 +207,211 @@ function pre_payment_complete() {
       error_log('Ordine > '.$content);
     }
 
-    $fp = fopen($_SERVER['DOCUMENT_ROOT'] . $filename,"wb");
-    fwrite($fp,$content);
-    fclose($fp);
+    error_log('Informazioni ordine salvate!');
+
+    // -----------------------------------------
+    // scrittura in cartella plugin
+    // -----------------------------------------
+    
+    $file = plugin_dir_path( __FILE__ ) . '/' . $filename; 
+    $fp = fopen( $file, "wb" ); 
+    if( $fp == false ){
+        error_log('Errore creazione file!');
+    }
+    else{
+        error_log('Scrittura file testo!');
+        fwrite($fp,$content);
+        fflush($fp);
+        fclose($fp);
+    }
 
     // -----------------------------------------
     // -----------------------------------------
     
+    error_log('Fine esportazione ordine!');
+}
+
+// -----------------------------------------
+// CSV TXT EXPORT
+// -----------------------------------------
+
+if ( isset($_GET['action'] ) && $_GET['action'] == 'download_csv' )  {
+	add_action( 'admin_init', 'csv_txt_export');
+}
+
+function csv_txt_export() {
+    error_log('Esportazione ordine!');
+
+    // Check for current user privileges 
+    //if( !current_user_can( 'manage_options' ) ){ return false; }
+
+    // Check if we are in WP-Admin
+    //if( !is_admin() ){ return false; }
+
+    // Nonce Check
+    // $nonce = isset( $_GET['_wpnonce'] ) ? $_GET['_wpnonce'] : '';
+    // if ( ! wp_verify_nonce( $nonce, 'download_csv' ) ) {
+    //     die( 'Security check error' );
+    // }
+
+    // -----------------------------------------
+    // -----------------------------------------
+
+    $domain = $_SERVER['SERVER_NAME'];
+
+    // -----------------------------------------
+    // CSV EXPORT
+    // -----------------------------------------
+    
+    /* 
+    ob_start();
+    $filename = 'ordini-' . $domain . '-' . time() . '.csv';
+    $header_row = array(
+        'Email',
+        'Name'
+    );
+    $data_rows = array();
+    global $wpdb;
+    $sql = 'SELECT * FROM ' . $wpdb->users;
+    $users = $wpdb->get_results( $sql, 'ARRAY_A' );
+    foreach ( $users as $user ) {
+        $row = array(
+            $user['user_email'],
+            $user['user_name']
+        );
+        $data_rows[] = $row;
+    }
+    $fh = @fopen( 'php://output', 'w' );
+    fprintf( $fh, chr(0xEF) . chr(0xBB) . chr(0xBF) );
+    header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
+    header( 'Content-Description: File Transfer' );
+    header( 'Content-type: text/csv' );
+    header( "Content-Disposition: attachment; filename={$filename}" );
+    header( 'Expires: 0' );
+    header( 'Pragma: public' );
+    fputcsv( $fh, $header_row );
+    foreach ( $data_rows as $data_row ) {
+        fputcsv( $fh, $data_row );
+    }
+    fclose( $fh );
     ob_end_flush();
+    */
+
+    // -----------------------------------------
+    // TXT EXPORT
+    // -----------------------------------------
+
+    $filename = 'ordini-' . $domain . '-' . time() . '.txt';
+    $content = '';
+
+    // get latest 1 order
+    $args = array( 
+      'limit' => 1, 
+    );
+    $orders = wc_get_orders( $args );
+
+    // orders foreach
+    foreach( $orders as $order ){
+      $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;
+        $content .= 'TIPO-MITTENTE ' . '0' . PHP_EOL;     // * Imporre fisso a [0]: Cliente Mittente
+        $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;    // * Riferimenti liberi del Cliente Mittente
+      $content .= 'CAMPI-DESTINATARIO ' . PHP_EOL;
+        $content .= 'NOME-DESTINATARIO ' . $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() . PHP_EOL; // *
+        $content .= 'INDIRIZZO-DESTINATARIO ' . $order->get_billing_address_1() . PHP_EOL;  // * Indirizzo di consegna della spedizione
+        $content .= 'AVVIAMENTO-POSTALE ' . $order->get_billing_postcode() . PHP_EOL;       // C.A.P . della Località di destinazione
+        $content .= 'LOCALITA-DESTINATARIO ' . $order->get_billing_city() . PHP_EOL;        // * Località di destinazione della merce
+        $content .= 'PROVINCIA-DESTINATARIO ' . $order->get_billing_state() . PHP_EOL;      // * Provincia o Distretto di destinazione
+        $content .= 'STATO-ESTERO ' . PHP_EOL;                                              // * Sigla internazionale dello Stato Estero
+      $content .= 'DATI-SPEDIZIONE ' . PHP_EOL;
+        $content .= 'TIPO-PORTO ' . 'F' . PHP_EOL;                        // * Porto [F]:Franco o Porto [A]:Assegnato > TODO
+        $content .= 'NUMERO-COLLI ' . $order->get_item_count() . PHP_EOL; // * Numero globale dei Colli della Spedizione
+        $content .= 'PESO-EFFETTIVO ' . PHP_EOL;                          // * Peso reale della merce espresso in Chili > TODO
+        $content .= 'METRI-CUBI ' . PHP_EOL;                              // Metri Cubi rilevati sulla spedizione
+        $content .= 'VALORE-MERCE ' . $order->get_total() . PHP_EOL;      // Valore della merce espressa in Euro €
+      $content .= 'CONTRASSEGNO ' . PHP_EOL;
+        $content .= 'IMPORTO-ASSEGNO ' . PHP_EOL;         // Importo dell’eventuale Contrassegno
+        $content .= 'PROVVIGIONE-ASSEGNO ' . PHP_EOL;     // A carico [M]ittente o [D]estinatario
+      $content .= 'CAMPI-DIVERSI ' . PHP_EOL;
+        $content .= 'CORRIERE-PRESCRITTO ' . PHP_EOL;     // Prescrizione obbligatoria del Corriere d'inoltro
+        $content .= 'DESCRIZIONE-MERCE ' . PHP_EOL;       // * Descrizione della natura della merce > TODO
+        $content .= 'TIPO-SERVIZIO ' . PHP_EOL;           // * [0]: Normale [1] Espresso > TODO
+      $content .= 'ANNOTAZIONI-MITTENTE ' . PHP_EOL;
+        $content .= 'DISPOSIZIONI-MITTENTE ' . PHP_EOL;   // Annotazioni da riportare in Bolla
+        $content .= 'CONSEGNA-TASSATIVA ' . PHP_EOL;      // Data di consegna Tassativa per il Vettore
+        $content .= 'MARCA-INIZIALE ' . PHP_EOL;          // Primo codice di marcatura del Mittente
+        $content .= 'MARCA-FINALE ' . PHP_EOL;            // Ultimo codice di marcatura del Mittente
+        $content .= 'RAGGRUPPAMENTO ' . PHP_EOL;          // Chiave di raggruppamento delle bolle
+      $content .= 'PRESCRIZIONI-MITTENTE ' . PHP_EOL;
+        $content .= 'PREAVVISO-TELEFONICO ' . PHP_EOL;                          // [*] - E’ richiesto il preavviso telefonico
+        $content .= 'NUMERO-TELEFONO ' . $order->get_billing_phone() . PHP_EOL; // N. Telefono da utilizzare per il preavviso
+        $content .= 'SPONDA-IDRAULICA ' . PHP_EOL;                              // [*] - E’ richiesto l’utilizzo di Sponda idraulica
+        $content .= 'CENTRO-STORICO ' . PHP_EOL;                                // [*] - Consegna da effettuare in Centro Storico
+        $content .= 'GRANDE-DISTRIBUZIONE ' . PHP_EOL;                          // [*] - Consegna da effettuare presso una GDO
+        $content .= 'PORTO-DOGANA ' . PHP_EOL;                                  // [*] - Consegna da effettuare in area doganale
+        $content .= 'MERCE-LUNGA ' . PHP_EOL;                                   // Lunghezza della merce espressa in Centimetri
+        $content .= 'CONSEGNA-AL-PIANO ' . PHP_EOL;                             // [*] - E’ prevista la consegna al piano
+        $content .= 'GIORNO-CHIUSURA ' . PHP_EOL;                               // Giorno di chiusura: [1]:Lunedì ... [7]:Domenica
+        $content .= 'MODALITA-CHIUSURA ' . PHP_EOL;                             // [M]attino - [P]omeriggio - [T]utto il giorno
+      $content .= 'CAMPI-DISPONIBILI ' . PHP_EOL;
+        $content .= 'STATO-PARTITA-IVA ' . PHP_EOL;
+        $content .= 'PARTITA-IVA-DESTINATARIO ' . PHP_EOL;
+        $content .= 'BARCODE-DDT-MITTENTE ' . PHP_EOL;
+        $content .= 'NUMERO-BANCALI ' . PHP_EOL;
+        $content .= 'TIPO-BANCALI ' . PHP_EOL;
+        $content .= 'PERSONALIZZAZIONI ' . PHP_EOL;
+      
+      /*
+      $content .= $order->get_billing_email();
+      */
+
+      error_log('Ordine > '.$content);
+    }
+
+    error_log('Informazioni ordine salvate!');
     
-    die();
-}
+    // -----------------------------------------
+    // download
+    // -----------------------------------------
 
-// -----------------------------------------
-// PAYMENT COMPLETE
-// -----------------------------------------
+    /*
+    ob_start();
+    $fh = @fopen( 'php://output', 'w' );
+    fprintf( $fh, chr(0xEF) . chr(0xBB) . chr(0xBF) );
+    header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
+    header( 'Content-Description: File Transfer' );
+    header( 'Content-type: text/plain' );
+    header( "Content-Disposition: attachment; filename={$filename}" );
+    header( 'Expires: 0' );
+    header( 'Pragma: public' );
+    fwrite($fh,$content);
+    fclose($fh);
+    ob_end_flush();
+    */
 
-// fired when the payment is completed
-add_action('woocommerce_payment_complete', 'payment_complete', 10, 1);
+    // -----------------------------------------
+    // scrittura in cartella plugin
+    // -----------------------------------------
 
-function payment_complete() {
-    // your code
-    error_log('Pagamento completato > '.$order_id);
-    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Pagamento Completato POL', 'Testata', 'Messaggio');
-}
+    
+    $file = plugin_dir_path( __FILE__ ) . '/' . $filename; 
+    $fp = fopen( $file, "wb" ); 
+    if( $fp == false ){
+        error_log('Errore creazione file!');
+    }
+    else{
+        error_log('Scrittura file testo!');
+        fwrite($fp,$content);
+        fflush($fp);
+        fclose($fp);
+    }
 
-// -----------------------------------------
-// CREATE ORDER
-// -----------------------------------------
+    // -----------------------------------------
+    // -----------------------------------------
+    
+    error_log('Fine export!');
 
-add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
-
-function create_order_and_send_email ($order_id) {
-    // your code
-    error_log('Ordine creato > '.$order_id);
-    csv_txt_export();
-    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine POL', 'Testata', 'Messaggio');
-}
-
-// @email - Email address of the receiver
-// @subject - Subject of the email
-// @heading - Heading to place inside of the woocommerce template
-// @message - Body content (can be HTML)
-function send_email_woocommerce_style($email, $subject, $heading, $message) {
-  
-  // Get file attachments
-  $attachments = array( WP_CONTENT_DIR . '/debug.log' );
-  
-  $headers = array(
-    'Content-Type: text/html; charset=UTF-8',
-    'From: Premiata Officina Lugaresi <email@here.com>'
-  );
-  
-  // Get woocommerce mailer from instance
-  $mailer = WC()->mailer();
-
-  // Wrap message using woocommerce html email template
-  $wrapped_message = $mailer->wrap_message($heading, $message);
-
-  // Create new WC_Email instance
-  $wc_email = new WC_Email;
-
-  // Style the wrapped message with woocommerce inline styles
-  $html_message = $wc_email->style_inline($wrapped_message);
-
-  // Send the email using wordpress mail function
-  wp_mail( $email, $subject, $html_message, $headers, $attachments );
-
+    //die();
+    
 }
 
 // -----------------------------------------
@@ -272,7 +509,7 @@ function wporg_options_page_html() {
         ?>
         </tbody>
       </table>
-
+      <!--
       <form action="options.php" method="post">
           <?php
           // output security fields for the registered setting "wporg_options"
@@ -284,182 +521,9 @@ function wporg_options_page_html() {
           submit_button( __( 'Save Settings', 'textdomain' ) );
           ?>
       </form>
+      -->
   </div>
   <?php
-}
-
-// -----------------------------------------
-// CSV EXPORT
-// -----------------------------------------
-
-if ( isset($_GET['action'] ) && $_GET['action'] == 'download_csv' )  {
-	add_action( 'admin_init', 'csv_txt_export');
-}
-
-function csv_txt_export() {
-
-    // Check for current user privileges 
-    if( !current_user_can( 'manage_options' ) ){ return false; }
-
-    // Check if we are in WP-Admin
-    if( !is_admin() ){ return false; }
-
-    // Nonce Check
-    // $nonce = isset( $_GET['_wpnonce'] ) ? $_GET['_wpnonce'] : '';
-    // if ( ! wp_verify_nonce( $nonce, 'download_csv' ) ) {
-    //     die( 'Security check error' );
-    // }
-
-    // -----------------------------------------
-    // -----------------------------------------
-
-    ob_start();
-    $domain = $_SERVER['SERVER_NAME'];
-
-    // -----------------------------------------
-    // CSV EXPORT
-    // -----------------------------------------
-    
-    /* 
-    $filename = 'ordini-' . $domain . '-' . time() . '.csv';
-    $header_row = array(
-        'Email',
-        'Name'
-    );
-    $data_rows = array();
-    global $wpdb;
-    $sql = 'SELECT * FROM ' . $wpdb->users;
-    $users = $wpdb->get_results( $sql, 'ARRAY_A' );
-    foreach ( $users as $user ) {
-        $row = array(
-            $user['user_email'],
-            $user['user_name']
-        );
-        $data_rows[] = $row;
-    }
-    $fh = @fopen( 'php://output', 'w' );
-    fprintf( $fh, chr(0xEF) . chr(0xBB) . chr(0xBF) );
-    header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
-    header( 'Content-Description: File Transfer' );
-    header( 'Content-type: text/csv' );
-    header( "Content-Disposition: attachment; filename={$filename}" );
-    header( 'Expires: 0' );
-    header( 'Pragma: public' );
-    fputcsv( $fh, $header_row );
-    foreach ( $data_rows as $data_row ) {
-        fputcsv( $fh, $data_row );
-    }
-    fclose( $fh );
-    */
-
-    // -----------------------------------------
-    // TXT EXPORT
-    // -----------------------------------------
-
-    $filename = 'ordini-' . $domain . '-' . time() . '.txt';
-    $content = '';
-
-    // get latest 1 order
-    $args = array( 
-      'limit' => 1, 
-    );
-    $orders = wc_get_orders( $args );
-
-    // orders foreach
-    foreach( $orders as $order ){
-      $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;
-        $content .= 'TIPO-MITTENTE ' . '0' . PHP_EOL;     // * Imporre fisso a [0]: Cliente Mittente
-        $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;    // * Riferimenti liberi del Cliente Mittente
-      $content .= 'CAMPI-DESTINATARIO ' . PHP_EOL;
-        $content .= 'NOME-DESTINATARIO ' . $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() . PHP_EOL; // *
-        $content .= 'INDIRIZZO-DESTINATARIO ' . $order->get_billing_address_1() . PHP_EOL;  // * Indirizzo di consegna della spedizione
-        $content .= 'AVVIAMENTO-POSTALE ' . $order->get_billing_postcode() . PHP_EOL;       // C.A.P . della Località di destinazione
-        $content .= 'LOCALITA-DESTINATARIO ' . $order->get_billing_city() . PHP_EOL;        // * Località di destinazione della merce
-        $content .= 'PROVINCIA-DESTINATARIO ' . $order->get_billing_state() . PHP_EOL;      // * Provincia o Distretto di destinazione
-        $content .= 'STATO-ESTERO ' . PHP_EOL;                                              // * Sigla internazionale dello Stato Estero
-      $content .= 'DATI-SPEDIZIONE ' . PHP_EOL;
-        $content .= 'TIPO-PORTO ' . 'F' . PHP_EOL;                        // * Porto [F]:Franco o Porto [A]:Assegnato > TODO
-        $content .= 'NUMERO-COLLI ' . $order->get_item_count() . PHP_EOL; // * Numero globale dei Colli della Spedizione
-        $content .= 'PESO-EFFETTIVO ' . PHP_EOL;                          // * Peso reale della merce espresso in Chili > TODO
-        $content .= 'METRI-CUBI ' . PHP_EOL;                              // Metri Cubi rilevati sulla spedizione
-        $content .= 'VALORE-MERCE ' . $order->get_total() . PHP_EOL;      // Valore della merce espressa in Euro €
-      $content .= 'CONTRASSEGNO ' . PHP_EOL;
-        $content .= 'IMPORTO-ASSEGNO ' . PHP_EOL;         // Importo dell’eventuale Contrassegno
-        $content .= 'PROVVIGIONE-ASSEGNO ' . PHP_EOL;     // A carico [M]ittente o [D]estinatario
-      $content .= 'CAMPI-DIVERSI ' . PHP_EOL;
-        $content .= 'CORRIERE-PRESCRITTO ' . PHP_EOL;     // Prescrizione obbligatoria del Corriere d'inoltro
-        $content .= 'DESCRIZIONE-MERCE ' . PHP_EOL;       // * Descrizione della natura della merce > TODO
-        $content .= 'TIPO-SERVIZIO ' . PHP_EOL;           // * [0]: Normale [1] Espresso > TODO
-      $content .= 'ANNOTAZIONI-MITTENTE ' . PHP_EOL;
-        $content .= 'DISPOSIZIONI-MITTENTE ' . PHP_EOL;   // Annotazioni da riportare in Bolla
-        $content .= 'CONSEGNA-TASSATIVA ' . PHP_EOL;      // Data di consegna Tassativa per il Vettore
-        $content .= 'MARCA-INIZIALE ' . PHP_EOL;          // Primo codice di marcatura del Mittente
-        $content .= 'MARCA-FINALE ' . PHP_EOL;            // Ultimo codice di marcatura del Mittente
-        $content .= 'RAGGRUPPAMENTO ' . PHP_EOL;          // Chiave di raggruppamento delle bolle
-      $content .= 'PRESCRIZIONI-MITTENTE ' . PHP_EOL;
-        $content .= 'PREAVVISO-TELEFONICO ' . PHP_EOL;                          // [*] - E’ richiesto il preavviso telefonico
-        $content .= 'NUMERO-TELEFONO ' . $order->get_billing_phone() . PHP_EOL; // N. Telefono da utilizzare per il preavviso
-        $content .= 'SPONDA-IDRAULICA ' . PHP_EOL;                              // [*] - E’ richiesto l’utilizzo di Sponda idraulica
-        $content .= 'CENTRO-STORICO ' . PHP_EOL;                                // [*] - Consegna da effettuare in Centro Storico
-        $content .= 'GRANDE-DISTRIBUZIONE ' . PHP_EOL;                          // [*] - Consegna da effettuare presso una GDO
-        $content .= 'PORTO-DOGANA ' . PHP_EOL;                                  // [*] - Consegna da effettuare in area doganale
-        $content .= 'MERCE-LUNGA ' . PHP_EOL;                                   // Lunghezza della merce espressa in Centimetri
-        $content .= 'CONSEGNA-AL-PIANO ' . PHP_EOL;                             // [*] - E’ prevista la consegna al piano
-        $content .= 'GIORNO-CHIUSURA ' . PHP_EOL;                               // Giorno di chiusura: [1]:Lunedì ... [7]:Domenica
-        $content .= 'MODALITA-CHIUSURA ' . PHP_EOL;                             // [M]attino - [P]omeriggio - [T]utto il giorno
-      $content .= 'CAMPI-DISPONIBILI ' . PHP_EOL;
-        $content .= 'STATO-PARTITA-IVA ' . PHP_EOL;
-        $content .= 'PARTITA-IVA-DESTINATARIO ' . PHP_EOL;
-        $content .= 'BARCODE-DDT-MITTENTE ' . PHP_EOL;
-        $content .= 'NUMERO-BANCALI ' . PHP_EOL;
-        $content .= 'TIPO-BANCALI ' . PHP_EOL;
-        $content .= 'PERSONALIZZAZIONI ' . PHP_EOL;
-      
-      /*
-      $content .= $order->get_billing_email();
-      */
-
-      error_log('Ordine > '.$content);
-    }
-    
-    // -----------------------------------------
-    // download
-    // -----------------------------------------
-
-    $fh = @fopen( 'php://output', 'w' );
-    fprintf( $fh, chr(0xEF) . chr(0xBB) . chr(0xBF) );
-    header( 'Cache-Control: must-revalidate, post-check=0, pre-check=0' );
-    header( 'Content-Description: File Transfer' );
-    header( 'Content-type: text/plain' );
-    header( "Content-Disposition: attachment; filename={$filename}" );
-    header( 'Expires: 0' );
-    header( 'Pragma: public' );
-    fwrite($fh,$content);
-    fclose($fh);
-
-    // -----------------------------------------
-    // scrittura in cartella plugin
-    // -----------------------------------------
-    
-    $file = plugin_dir_path( __FILE__ ) . '/' . $filename; 
-    $fp = fopen( $file, "wb" ); 
-    if( $fp == false ){
-        error_log('Errore creazione file!');
-    }
-    else{
-        error_log('Scrittura file testo!');
-        fwrite($fp,$content);
-        fflush($fp);
-        fclose($fp);
-    }
-
-    // -----------------------------------------
-    // -----------------------------------------
-    
-    ob_end_flush();
-    die();
-
-    
 }
 
 // -----------------------------------------
