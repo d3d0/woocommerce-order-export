@@ -12,6 +12,10 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+// SPEDIZIONE
+// gratis sopra i 100 €
+// gratis sopra i 50 kg
+
 // -----------------------------------------
 // SEND MAIL FUNCTION
 // -----------------------------------------
@@ -48,13 +52,24 @@ function send_email_woocommerce_style($email, $subject, $heading, $message) {
 }
 
 // -----------------------------------------
+// ORDER STATUS COMPLETE > OK!
+// https://squelchdesign.com/web-design-newbury/woocommerce-detecting-order-complete-on-order-completion/
+// -----------------------------------------
+
+add_action( 'woocommerce_order_status_completed', 'mysite_woocommerce_order_status_completed', 10, 1 );
+function mysite_woocommerce_order_status_completed( $order_id ) {
+    error_log( "### Stato ordine completato > $order_id", 0 );
+    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Ordine Completato POL', 'Testata', 'Messaggio');
+}
+
+// -----------------------------------------
 // THANK YOU > OK!
 // -----------------------------------------
 
 add_action('woocommerce_thankyou', 'enroll_student', 10, 1);
 function enroll_student( $order_id ) {
     
-    error_log('Thank you page ordine > '.$order_id);
+    error_log('### Thank you page ordine > '.$order_id);
     csv_txt_save();
 
     /*
@@ -90,42 +105,42 @@ function enroll_student( $order_id ) {
 
 // -----------------------------------------
 // PRE PAYMENT COMPLETE
+// fired before the order is saved
 // -----------------------------------------
 
-// fired before the order is saved
 add_action('woocommerce_pre_payment_complete', 'pre_payment_complete', 10, 1);
 
 function pre_payment_complete() {
-    error_log('Pagamento completato > '.$order_id);
+    error_log('### Pre pagamento completato > '.$order_id);
     //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Pagamento Completato POL', 'Testata', 'Messaggio');
 }
 
 // -----------------------------------------
 // PAYMENT COMPLETE
+// fired when the payment is completed
 // -----------------------------------------
 
-// fired when the payment is completed
 add_action('woocommerce_payment_complete', 'payment_complete', 10, 1);
 
 function payment_complete() {
-    error_log('Pagamento completato > '.$order_id);
+    error_log('### Pagamento completato > '.$order_id);
     //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Pagamento Completato POL', 'Testata', 'Messaggio');
 }
 
 // -----------------------------------------
-// CREATE ORDER
+// CREATE ORDER > OK!
 // -----------------------------------------
 
 add_action('woocommerce_new_order', 'create_order_and_send_email', 10, 1);
 
 function create_order_and_send_email ($order_id) {
-    error_log('Ordine creato > '.$order_id);
-    //csv_txt_export(); // NO > genera errore ajax!
+    error_log('### Ordine creato > '.$order_id);
+    //csv_txt_export(); // NO > genera errore ajax!!!
     //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Nuovo Ordine POL', 'Testata', 'Messaggio');
 }
 
 // -----------------------------------------
-// CSV TXT SAVE
+// CSV TXT SAVE > OK!
 // -----------------------------------------
 
 function csv_txt_save() {
@@ -204,10 +219,11 @@ function csv_txt_save() {
       $content .= $order->get_billing_email();
       */
 
-      error_log('Ordine > '.$content);
+      // LOG FILE DI TESTO
+      // error_log('Ordine > '.$content);
     }
 
-    error_log('Informazioni ordine salvate!');
+    // error_log('Informazioni ordine salvate!');
 
     // -----------------------------------------
     // scrittura in cartella plugin
@@ -219,7 +235,7 @@ function csv_txt_save() {
         error_log('Errore creazione file!');
     }
     else{
-        error_log('Scrittura file testo!');
+        error_log('File testo scritto con successo!');
         fwrite($fp,$content);
         fflush($fp);
         fclose($fp);
