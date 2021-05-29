@@ -104,7 +104,7 @@ function enroll_student( $order_id ) {
 }
 
 // -----------------------------------------
-// PRE PAYMENT COMPLETE
+// PRE PAYMENT COMPLETE > TEST ???
 // fired before the order is saved
 // -----------------------------------------
 
@@ -116,7 +116,7 @@ function pre_payment_complete() {
 }
 
 // -----------------------------------------
-// PAYMENT COMPLETE
+// PAYMENT COMPLETE > TEST ???
 // fired when the payment is completed
 // -----------------------------------------
 
@@ -143,6 +143,13 @@ function create_order_and_send_email ($order_id) {
 // CSV TXT SAVE > OK!
 // -----------------------------------------
 
+function calcola_stringa($stringa, $lunghezza) {
+    $stringLength = strlen($stringa); // calcola lunghezza stringa
+    $stringaCalcolata = $stringa; // inizializzo string
+    $stringaCalcolata .= str_repeat(' ', $lunghezza - $stringLength); // aggiungi spazi in base a lunghezza stringa
+    return $stringaCalcolata;
+}
+
 function csv_txt_save() {
 
     error_log('Inizio esportazione ordine!');
@@ -167,7 +174,33 @@ function csv_txt_save() {
 
     // orders foreach
     foreach( $orders as $order ){
-      $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;
+      //$nome = substr($nomeTemp, 0, 30);
+
+      $content1 = '';
+      $content1 .= '0';
+      $content1 .= str_repeat('0', 16);
+        /*
+        $nomeTemp = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // * OBBLIGATORIO
+        $stringLength = strlen($nomeTemp); // calcola lunghezza stringa
+        $nomeTemp .= str_repeat(' ', 30 - $stringLength);// aggiungi spazi in base a lunghezza stringa
+        $nome = $nomeTemp;
+        */
+        $nomeTemp = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // * OBBLIGATORIO
+        $nome = calcola_stringa($nomeTemp, 30);
+      $content1 .= $nome;
+        $indirizzoTemp = $order->get_billing_address_1(); // * Indirizzo di consegna della spedizione
+        $indirizzo = calcola_stringa($indirizzoTemp, 30);
+      $content1 .= $indirizzo;
+      /*
+        $capTemp = $order->get_billing_postcode(); // C.A.P . della Località di destinazione
+        $cap = substr($capTemp, 0, 5);
+      $content1 .= $cap;
+        $localitaTemp = $order->get_billing_city(); // * Località di destinazione della merce
+        $localita = substr($localitaTemp, 0, 20); 
+      $content1 .= $localita;
+      */
+
+      $content .= 'RIFERIMENTI-MITTENTE ';
         $content .= 'TIPO-MITTENTE ' . '0' . PHP_EOL;     // * Imporre fisso a [0]: Cliente Mittente
         $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;    // * Riferimenti liberi del Cliente Mittente
       $content .= 'CAMPI-DESTINATARIO ' . PHP_EOL;
@@ -236,7 +269,8 @@ function csv_txt_save() {
     }
     else{
         error_log('File testo scritto con successo!');
-        fwrite($fp,$content);
+        //fwrite($fp,$content);
+        fwrite($fp,$content1);
         fflush($fp);
         fclose($fp);
     }
