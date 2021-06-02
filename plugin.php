@@ -144,10 +144,23 @@ function create_order_and_send_email ($order_id) {
 // -----------------------------------------
 
 function calcola_stringa($stringa, $lunghezza) {
-    $stringLength = strlen($stringa); // calcola lunghezza stringa
-    $stringaCalcolata = $stringa; // inizializzo string
-    $stringaCalcolata .= str_repeat(' ', $lunghezza - $stringLength); // aggiungi spazi in base a lunghezza stringa
+    $stringLength = strlen($stringa); // calcolo lunghezza stringa
+    $stringaCalcolataTemp = $stringa; // inizializzo string
+    $stringaCalcolata = substr($stringaCalcolataTemp, 0, $lunghezza); ; // imposto lunghezza MAX CAMPO
+    $stringaCalcolata .= str_repeat(' ', $lunghezza - $stringLength); // aggiungo spazi in base a lunghezza MAX CAMPO
     return $stringaCalcolata;
+}
+function calcola_numero($numero, $lunghezza, $decimali) {
+    $numWhole = floor($numero); // numero intero
+    $numFractionTemp = $numero - $numWhole; // .00
+    $numFraction = str_replace(".","",$numFractionTemp); // pulisco il punto dai decimali
+    $numLength = strlen($numWhole); // calcolo lunghezza numero
+    $numZeros = str_repeat('0', $lunghezza - $numLength); // calcolo zeri da aggiungere
+    $numeroCalcTemp = substr_replace($numWhole,$numZeros,0,0); // inizializzo numero e aggiungo ZERI in base a lunghezza campo
+    $numeroCalc = substr($numeroCalcTemp, 0, $lunghezza + $decimali); ; // imposto lunghezza MAX CAMPO CON DECIMALI
+    if($decimali > 0) $numeroCalc .= str_repeat(''.$numFraction.'', 1); // aggiungo decimali in base a lunghezza MAX CAMPO
+
+    return $numeroCalc;
 }
 
 function csv_txt_save() {
@@ -174,32 +187,49 @@ function csv_txt_save() {
 
     // orders foreach
     foreach( $orders as $order ){
-      //$nome = substr($nomeTemp, 0, 30);
 
+      // generazione txt per tracciato
       $content1 = '';
-      $content1 .= '0';
-      $content1 .= str_repeat('0', 16);
-        /*
-        $nomeTemp = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // * OBBLIGATORIO
-        $stringLength = strlen($nomeTemp); // calcola lunghezza stringa
-        $nomeTemp .= str_repeat(' ', 30 - $stringLength);// aggiungi spazi in base a lunghezza stringa
-        $nome = $nomeTemp;
-        */
-        $nomeTemp = $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(); // * OBBLIGATORIO
+      $content1 .= '0';                                     // * Imporre fisso a [0]: Cliente Mittente
+      $content1 .= str_repeat('0', 16);                     // * Riferimenti liberi del Cliente Mittente
+        $nomeTemp = $order->get_billing_first_name(). ' ' .$order->get_billing_last_name(); // * Nome
         $nome = calcola_stringa($nomeTemp, 30);
-      $content1 .= $nome;
-        $indirizzoTemp = $order->get_billing_address_1(); // * Indirizzo di consegna della spedizione
+      $content1 .= $nome; // *
+        $indirizzoTemp = $order->get_billing_address_1();   // * Indirizzo di consegna della spedizione
         $indirizzo = calcola_stringa($indirizzoTemp, 30);
-      $content1 .= $indirizzo;
-      /*
-        $capTemp = $order->get_billing_postcode(); // C.A.P . della Località di destinazione
-        $cap = substr($capTemp, 0, 5);
+      $content1 .= $indirizzo; // *
+        $capTemp = $order->get_billing_postcode();          // C.A.P . della Località di destinazione
+        $cap = calcola_stringa($capTemp, 5);
       $content1 .= $cap;
-        $localitaTemp = $order->get_billing_city(); // * Località di destinazione della merce
-        $localita = substr($localitaTemp, 0, 20); 
-      $content1 .= $localita;
-      */
+        $localitaTemp = $order->get_billing_city();         // * Località di destinazione della merce
+        $localita = calcola_stringa($localitaTemp, 20); 
+      $content1 .= $localita; // *
+        $provinciaTemp = $order->get_billing_state();       // * Provincia o Distretto di destinazione
+        $provincia = calcola_stringa($provinciaTemp, 4); 
+      $content1 .= $provincia; // *
+        $statoTemp = ' ';                                   // * Sigla internazionale dello Stato Estero
+        $stato = calcola_stringa($statoTemp, 3); 
+      $content1 .= $stato; // *
+        $portoTemp = 'F';                                   // * Porto [F]:Franco o Porto [A]:Assegnato > TODO
+        $porto = calcola_stringa($portoTemp, 1); 
+      $content1 .= $porto; // *
+        $colliTemp = $order->get_item_count();              // * Numero globale dei Colli della Spedizione
+        $colli = calcola_numero($colliTemp, 5, 0); 
+      $content1 .= $colli; // *
+        $pesoTemp = 22;                                      // * Peso reale della merce espresso in Chili > TODO
+        $peso = calcola_numero($pesoTemp, 6, 1); 
+      $content1 .= $peso; // *
+      $content1 .= '00000';                                  // Metri Cubi rilevati sulla spedizione
+        $valoreTemp = $order->get_total();                   // Valore della merce espressa in Euro €
+        $valore = calcola_numero($valoreTemp, 9, 2); 
+      $content1 .= $valore; // *
+      $content1 .= '00000000000';                            // Importo dell’eventuale Contrassegno > 11
+      $content1 .= ' ';                                      // A carico [M]ittente o [D]estinatario > 1
+      $content1 .= '                              ';         // Prescrizione obbligatoria del Corriere d'inoltro > 30
+      $content1 .= 'CARTONI         ';                       // * Descrizione della natura della merce > 16
+      $content1 .= '0';                                      // * [0]: Normale [1] Espresso > TODO
 
+      // generazione txt normale
       $content .= 'RIFERIMENTI-MITTENTE ';
         $content .= 'TIPO-MITTENTE ' . '0' . PHP_EOL;     // * Imporre fisso a [0]: Cliente Mittente
         $content .= 'RIFERIMENTI-MITTENTE ' . PHP_EOL;    // * Riferimenti liberi del Cliente Mittente
