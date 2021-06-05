@@ -16,6 +16,46 @@ if ( ! defined( 'ABSPATH' ) ) {
 // gratis sopra i 100 €
 // gratis sopra i 50 kg
 
+// -----------------------------------------------------
+// WooCommerce total order weight column on orders page 
+// https://gist.github.com/kloon/5299119
+// -----------------------------------------------------
+
+add_filter( 'manage_edit-shop_order_columns', 'woo_order_weight_column' );
+function woo_order_weight_column( $columns ) {
+  $columns['total_weight'] = __( 'Weight', 'woocommerce' );
+	return $columns;
+}
+
+add_action( 'manage_shop_order_posts_custom_column', 'woo_custom_order_weight_column', 2 );
+function woo_custom_order_weight_column( $column ) {
+	global $post, $woocommerce, $the_order;
+
+	if ( empty( $the_order ) || $the_order->get_id() !== $post->ID )
+		$the_order = new WC_Order( $post->ID );
+
+	if ( $column == 'total_weight' ) {
+		$weight = 0;
+		if ( sizeof( $the_order->get_items() ) > 0 ) {
+			foreach( $the_order->get_items() as $item ) {
+				if ( $item['product_id'] > 0 ) {
+					$_product = $item->get_product();
+					if ( ! $_product->is_virtual() ) {
+            if ( $_product->get_weight() ) {
+              $weight += $_product->get_weight() * $item['qty'];
+            }
+					}
+				}
+			}
+		}
+		if ( $weight > 0 ) {
+			print $weight . ' ' . esc_attr( get_option('woocommerce_weight_unit' ) );
+		} else {
+			print 'N/A';
+		}
+	}
+}
+
 // -----------------------------------------
 // SEND MAIL FUNCTION
 // -----------------------------------------
@@ -158,7 +198,7 @@ function calcola_numero($numero, $lunghezza, $decimali) {
     $numZeros = str_repeat('0', $lunghezza - $numLength); // calcolo zeri da aggiungere
     $numeroCalcTemp = substr_replace($numWhole,$numZeros,0,0); // inizializzo numero e aggiungo ZERI in base a lunghezza campo
     $numeroCalc = substr($numeroCalcTemp, 0, $lunghezza + $decimali); ; // imposto lunghezza MAX CAMPO CON DECIMALI
-    if($numFraction == 0) $numFraction = '00'; // se è 0 => 00
+    if($numFraction == 0 && $decimali > 1) $numFraction = '00'; // se è 0 => 00
     if($decimali > 0) $numeroCalc .= str_repeat(''.$numFraction.'', 1); // aggiungo decimali in base a lunghezza MAX CAMPO
 
     return $numeroCalc;
@@ -189,6 +229,21 @@ function csv_txt_save() {
     // orders foreach
     foreach( $orders as $order ){
 
+      // calcolo peso colli
+      $weight = 0;
+      if ( sizeof( $order->get_items() ) > 0 ) {
+        foreach( $order->get_items() as $item ) {
+          if ( $item['product_id'] > 0 ) {
+            $_product = $item->get_product();
+            if ( ! $_product->is_virtual() ) {
+              if ( $_product->get_weight() ) {
+                $weight += $_product->get_weight() * $item['qty'];
+              }
+            }
+          }
+        }
+      }
+
       // generazione txt per tracciato
       $content1 = '';
       $content1 .= '0';                                     // * Imporre fisso a [0]: Cliente Mittente
@@ -217,30 +272,30 @@ function csv_txt_save() {
           $colliTemp = $order->get_item_count();              // * Numero globale dei Colli della Spedizione
           $colli = calcola_numero($colliTemp, 5, 0); 
       $content1 .= $colli; // *
-          $pesoTemp = 22;                                      // * Peso reale della merce espresso in Chili > TODO
+          $pesoTemp = $weight;                                // * Peso reale della merce espresso in Chili > TODO
           $peso = calcola_numero($pesoTemp, 6, 1); 
       $content1 .= $peso; // *
-      $content1 .= '00000';                                    // Metri Cubi rilevati sulla spedizione
-          $valoreTemp = $order->get_total();                   // Valore della merce espressa in Euro €
+      $content1 .= '00000';                                   // Metri Cubi rilevati sulla spedizione
+          $valoreTemp = $order->get_total();                  // Valore della merce espressa in Euro €
           $valore = calcola_numero($valoreTemp, 9, 2); 
       $content1 .= $valore; // *
-          $importoAssegno = calcola_numero('0', 9, 2);         // Importo dell’eventuale Contrassegno > 11
+          $importoAssegno = calcola_numero('0', 9, 2);        // Importo dell’eventuale Contrassegno > 11
       $content1 .= $importoAssegno;                            
-      $content1 .= 'M';                                        // A carico [M]ittente o [D]estinatario > 1 > ???
-          $prescrizione = calcola_stringa('', 30);             // Prescrizione obbligatoria del Corriere d'inoltro > 30
+      $content1 .= 'M';                                       // A carico [M]ittente o [D]estinatario > 1 > ???
+          $prescrizione = calcola_stringa('', 30);            // Prescrizione obbligatoria del Corriere d'inoltro > 30
       $content1 .= $prescrizione;
-          $naturaMerce = calcola_stringa('', 16);               // * Descrizione della natura della merce > 16
+          $naturaMerce = calcola_stringa('', 16);             // * Descrizione della natura della merce > 16
       $content1 .= $naturaMerce; // *                  
-      $content1 .= '0'; // *                                   // * Tipo servizio [0]: Normale [1] Espresso > 1
-          $disposizioni = calcola_stringa('', 30);                    // Dispos. Mittente > Annotazioni da riportare in Bolla > 30
+      $content1 .= '0'; // *                                  // * Tipo servizio [0]: Normale [1] Espresso > 1
+          $disposizioni = calcola_stringa('', 30);            // Dispos. Mittente > Annotazioni da riportare in Bolla > 30
       $content1 .= $disposizioni;
-          $consegnaTass = calcola_numero('0', 8, 0);           // Data di consegna Tassativa per il Vettore > 8
+          $consegnaTass = calcola_numero('0', 8, 0);          // Data di consegna Tassativa per il Vettore > 8
       $content1 .= $consegnaTass;
-          $marcaIniziale = calcola_numero('0', 7, 0);          // Primo codice di marcatura del Mittente > 7
+          $marcaIniziale = calcola_numero('0', 7, 0);         // Primo codice di marcatura del Mittente > 7
       $content1 .= $marcaIniziale;
-          $marcaFinale = calcola_numero('0', 7, 0);            // Ultimo codice di marcatura del Mittente > 7
+          $marcaFinale = calcola_numero('0', 7, 0);           // Ultimo codice di marcatura del Mittente > 7
       $content1 .= $marcaFinale;
-          $raggruppamento = calcola_stringa('', 30);           // Chiave di raggruppamento delle bolle > 30
+          $raggruppamento = calcola_stringa('', 30);          // Chiave di raggruppamento delle bolle > 30
       $content1 .= $raggruppamento;
 
 
