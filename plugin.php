@@ -192,14 +192,29 @@ function calcola_stringa($stringa, $lunghezza) {
 }
 function calcola_numero($numero, $lunghezza, $decimali) {
     $numWhole = floor($numero); // numero intero
+    error_log('numero intero ----------'.$numWhole);
+
+    // calcolo frazione
     $numFractionTemp = $numero - $numWhole; // .00
+    $numFractionTemp = round($numFractionTemp,2,PHP_ROUND_HALF_UP); // arrotondo al secondo decimale per eccesso
+    error_log('frazione inizio'.$numFractionTemp);
+    $numFractionTemp = str_replace("0.","",$numFractionTemp); // pulisco il zero punto (0.) dai decimali
+    error_log('frazione temp'.$numFractionTemp);
     $numFraction = str_replace(".","",$numFractionTemp); // pulisco il punto dai decimali
+    error_log('frazione temp'.$numFraction);
+    if($numFraction == 0 && $decimali > 1) $numFraction = '00'; // se è 0 e ha 2 decimali => 00
+    if(strlen($numFraction) == 1 && $decimali > 1) $numFraction = strval($numFraction) . '0'; // se lunghezza frazione == 1 e ha 2 decimali => 00
+    error_log('frazione fine'.$numFraction);
+
+    // calcolo intero
     $numLength = strlen($numWhole); // calcolo lunghezza numero
     $numZeros = str_repeat('0', $lunghezza - $numLength); // calcolo zeri da aggiungere
     $numeroCalcTemp = substr_replace($numWhole,$numZeros,0,0); // inizializzo numero e aggiungo ZERI in base a lunghezza campo
     $numeroCalc = substr($numeroCalcTemp, 0, $lunghezza + $decimali); ; // imposto lunghezza MAX CAMPO CON DECIMALI
-    if($numFraction == 0 && $decimali > 1) $numFraction = '00'; // se è 0 => 00
+    
+    // calcolo numero
     if($decimali > 0) $numeroCalc .= str_repeat(''.$numFraction.'', 1); // aggiungo decimali in base a lunghezza MAX CAMPO
+    error_log('numero calcolato ----------'.$numeroCalc);
 
     return $numeroCalc;
 }
