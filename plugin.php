@@ -158,6 +158,7 @@ function calcola_numero($numero, $lunghezza, $decimali) {
     $numZeros = str_repeat('0', $lunghezza - $numLength); // calcolo zeri da aggiungere
     $numeroCalcTemp = substr_replace($numWhole,$numZeros,0,0); // inizializzo numero e aggiungo ZERI in base a lunghezza campo
     $numeroCalc = substr($numeroCalcTemp, 0, $lunghezza + $decimali); ; // imposto lunghezza MAX CAMPO CON DECIMALI
+    if($numFraction == 0) $numFraction = '00'; // se è 0 => 00
     if($decimali > 0) $numeroCalc .= str_repeat(''.$numFraction.'', 1); // aggiungo decimali in base a lunghezza MAX CAMPO
 
     return $numeroCalc;
@@ -192,42 +193,57 @@ function csv_txt_save() {
       $content1 = '';
       $content1 .= '0';                                     // * Imporre fisso a [0]: Cliente Mittente
       $content1 .= str_repeat('0', 16);                     // * Riferimenti liberi del Cliente Mittente
-        $nomeTemp = $order->get_billing_first_name(). ' ' .$order->get_billing_last_name(); // * Nome
-        $nome = calcola_stringa($nomeTemp, 30);
+          $nomeTemp = $order->get_billing_first_name(). ' ' .$order->get_billing_last_name(); // * Nome
+          $nome = calcola_stringa($nomeTemp, 30);
       $content1 .= $nome; // *
-        $indirizzoTemp = $order->get_billing_address_1();   // * Indirizzo di consegna della spedizione
-        $indirizzo = calcola_stringa($indirizzoTemp, 30);
+          $indirizzoTemp = $order->get_billing_address_1();   // * Indirizzo di consegna della spedizione
+          $indirizzo = calcola_stringa($indirizzoTemp, 30);
       $content1 .= $indirizzo; // *
-        $capTemp = $order->get_billing_postcode();          // C.A.P . della Località di destinazione
-        $cap = calcola_stringa($capTemp, 5);
+          $capTemp = $order->get_billing_postcode();          // C.A.P . della Località di destinazione
+          $cap = calcola_stringa($capTemp, 5);
       $content1 .= $cap;
-        $localitaTemp = $order->get_billing_city();         // * Località di destinazione della merce
-        $localita = calcola_stringa($localitaTemp, 20); 
+          $localitaTemp = $order->get_billing_city();         // * Località di destinazione della merce
+          $localita = calcola_stringa($localitaTemp, 20); 
       $content1 .= $localita; // *
-        $provinciaTemp = $order->get_billing_state();       // * Provincia o Distretto di destinazione
-        $provincia = calcola_stringa($provinciaTemp, 4); 
+          $provinciaTemp = $order->get_billing_state();       // * Provincia o Distretto di destinazione
+          $provincia = calcola_stringa($provinciaTemp, 4); 
       $content1 .= $provincia; // *
-        $statoTemp = ' ';                                   // * Sigla internazionale dello Stato Estero
-        $stato = calcola_stringa($statoTemp, 3); 
+          $statoTemp = ' ';                                   // * Sigla internazionale dello Stato Estero
+          $stato = calcola_stringa($statoTemp, 3); 
       $content1 .= $stato; // *
-        $portoTemp = 'F';                                   // * Porto [F]:Franco o Porto [A]:Assegnato > TODO
-        $porto = calcola_stringa($portoTemp, 1); 
+          $portoTemp = 'F';                                   // * Porto [F]:Franco o Porto [A]:Assegnato > TODO
+          $porto = calcola_stringa($portoTemp, 1); 
       $content1 .= $porto; // *
-        $colliTemp = $order->get_item_count();              // * Numero globale dei Colli della Spedizione
-        $colli = calcola_numero($colliTemp, 5, 0); 
+          $colliTemp = $order->get_item_count();              // * Numero globale dei Colli della Spedizione
+          $colli = calcola_numero($colliTemp, 5, 0); 
       $content1 .= $colli; // *
-        $pesoTemp = 22;                                      // * Peso reale della merce espresso in Chili > TODO
-        $peso = calcola_numero($pesoTemp, 6, 1); 
+          $pesoTemp = 22;                                      // * Peso reale della merce espresso in Chili > TODO
+          $peso = calcola_numero($pesoTemp, 6, 1); 
       $content1 .= $peso; // *
-      $content1 .= '00000';                                  // Metri Cubi rilevati sulla spedizione
-        $valoreTemp = $order->get_total();                   // Valore della merce espressa in Euro €
-        $valore = calcola_numero($valoreTemp, 9, 2); 
+      $content1 .= '00000';                                    // Metri Cubi rilevati sulla spedizione
+          $valoreTemp = $order->get_total();                   // Valore della merce espressa in Euro €
+          $valore = calcola_numero($valoreTemp, 9, 2); 
       $content1 .= $valore; // *
-      $content1 .= '00000000000';                            // Importo dell’eventuale Contrassegno > 11
-      $content1 .= ' ';                                      // A carico [M]ittente o [D]estinatario > 1
-      $content1 .= '                              ';         // Prescrizione obbligatoria del Corriere d'inoltro > 30
-      $content1 .= 'CARTONI         ';                       // * Descrizione della natura della merce > 16
-      $content1 .= '0';                                      // * [0]: Normale [1] Espresso > TODO
+          $importoAssegno = calcola_numero('0', 9, 2);         // Importo dell’eventuale Contrassegno > 11
+      $content1 .= $importoAssegno;                            
+      $content1 .= 'M';                                        // A carico [M]ittente o [D]estinatario > 1 > ???
+          $prescrizione = calcola_stringa('', 30);             // Prescrizione obbligatoria del Corriere d'inoltro > 30
+      $content1 .= $prescrizione;
+          $naturaMerce = calcola_stringa('', 16);               // * Descrizione della natura della merce > 16
+      $content1 .= $naturaMerce; // *                  
+      $content1 .= '0'; // *                                   // * Tipo servizio [0]: Normale [1] Espresso > 1
+          $disposizioni = calcola_stringa('', 30);                    // Dispos. Mittente > Annotazioni da riportare in Bolla > 30
+      $content1 .= $disposizioni;
+          $consegnaTass = calcola_numero('0', 8, 0);           // Data di consegna Tassativa per il Vettore > 8
+      $content1 .= $consegnaTass;
+          $marcaIniziale = calcola_numero('0', 7, 0);          // Primo codice di marcatura del Mittente > 7
+      $content1 .= $marcaIniziale;
+          $marcaFinale = calcola_numero('0', 7, 0);            // Ultimo codice di marcatura del Mittente > 7
+      $content1 .= $marcaFinale;
+          $raggruppamento = calcola_stringa('', 30);           // Chiave di raggruppamento delle bolle > 30
+      $content1 .= $raggruppamento;
+
+
 
       // generazione txt normale
       $content .= 'RIFERIMENTI-MITTENTE ';
