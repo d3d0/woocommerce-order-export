@@ -12,7 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+// -----------------------------------------
 // SPEDIZIONE
+// -----------------------------------------
 // gratis sopra i 100 €
 // gratis sopra i 50 kg
 
@@ -69,9 +71,10 @@ function send_email_woocommerce_style($email, $subject, $heading, $message) {
   // Get file attachments
   $attachments = array( WP_CONTENT_DIR . '/debug.log' );
   
+  // logistica@combitras.com
   $headers = array(
     'Content-Type: text/html; charset=UTF-8',
-    'From: Premiata Officina Lugaresi <email@here.com>'
+    'From: Premiata Officina Lugaresi <info@premiataofficinalugaresi.com>'
   );
   
   // Get woocommerce mailer from instance
@@ -99,7 +102,63 @@ function send_email_woocommerce_style($email, $subject, $heading, $message) {
 add_action( 'woocommerce_order_status_completed', 'mysite_woocommerce_order_status_completed', 10, 1 );
 function mysite_woocommerce_order_status_completed( $order_id ) {
     error_log( "### Stato ordine completato > $order_id", 0 );
-    //send_email_woocommerce_style('lorenzo.dedonato@gmail.com', 'Ordine Completato POL', 'Testata', 'Messaggio');
+    
+    // -----------------------------------------
+    // INVIO MAIL A COMBITRAS
+    // -----------------------------------------
+    $order = new WC_Order( $order_id );
+
+    $messaggio = '';
+    
+    // mittente
+    $messaggio .= '<strong>Mittente: </strong>' . PHP_EOL . PHP_EOL;
+    $messaggio .= 'Primo Spirits di Federico Lugaresi' . PHP_EOL . PHP_EOL;
+    $messaggio .= '<hr>';
+
+    // destinatario
+    $messaggio .= '<strong>Destinatario: </strong>' . PHP_EOL;
+
+    // shipping
+    $messaggio .= $order->get_shipping_first_name(). ' ' .$order->get_shipping_last_name() . PHP_EOL;
+    $messaggio .= $order->get_shipping_company() . PHP_EOL;
+    $messaggio .= $order->get_shipping_address_1() . PHP_EOL;
+    if ($order->get_shipping_address_2() != '')  $messaggio .= $order->get_shipping_address_2() . PHP_EOL;
+    $messaggio .= $order->get_shipping_postcode() . ' ' . $order->get_shipping_city() . ' ' . $order->get_shipping_state() . PHP_EOL;
+    $messaggio .= $order->get_shipping_country() . PHP_EOL . PHP_EOL;
+
+    // billing
+    if ($order->get_formatted_shipping_address() == NULL) {
+      $messaggio .= $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() . PHP_EOL;
+      $messaggio .= $order->get_billing_company() . PHP_EOL;
+      $messaggio .= $order->get_billing_address_1() . PHP_EOL;
+      if ($order->get_billing_address_2() != '') { $messaggio .= $order->get_billing_address_2() . PHP_EOL; }
+      $messaggio .= $order->get_billing_postcode() . ' ' . $order->get_billing_city() . ' ' . $order->get_billing_state() . PHP_EOL;
+      $messaggio .= $order->get_billing_country() . PHP_EOL . PHP_EOL;
+    }
+    $messaggio .= '<hr>';
+
+    // lista prodotti
+    $messaggio .= '<strong>Lista prodotti: </strong>' . PHP_EOL . PHP_EOL;
+    if ( sizeof( $order->get_items() ) > 0 ) {
+			foreach( $order->get_items() as $item ) {
+				if ( $item['product_id'] > 0 ) {
+					$_product = $item->get_product();
+					if ( ! $_product->is_virtual() ) {
+            if ( $_product->get_name() ) {
+              $prodottoNome = $_product->get_name();
+            }
+            $messaggio .= $item->get_name() . ' | '; // Get the item name (product name)
+            $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
+					}
+				}
+			}
+    }
+
+    // ID ordine
+    $ordine = 'Nuovo Ordine Primo Spirits - ID ' . $order_id;
+
+    // invio mail
+    send_email_woocommerce_style('lorenzo.dedonato@gmail.com, suprani.f@gmail.com', $ordine, $ordine, $messaggio);
 }
 
 // -----------------------------------------
@@ -110,36 +169,40 @@ add_action('woocommerce_thankyou', 'enroll_student', 10, 1);
 function enroll_student( $order_id ) {
     
     error_log('### Thank you page ordine > '.$order_id);
-    csv_txt_save();
+
+    // -----------------------------------------
+    // CREO IL TRACCIATO E LO SALVO
+    // -----------------------------------------
+    csv_txt_save($order_id);
 
     /*
-    if ( ! $order_id )
-        return;
-    
-    // Getting an instance of the order object
-    $order = wc_get_order( $order_id );
+      if ( ! $order_id )
+          return;
+      
+      // Getting an instance of the order object
+      $order = wc_get_order( $order_id );
 
-    if($order->is_paid())
-        $paid = 'yes';
-    else
-        $paid = 'no';
+      if($order->is_paid())
+          $paid = 'yes';
+      else
+          $paid = 'no';
 
-    // iterating through each order items (getting product ID and the product object / work for simple and variable products)
-    foreach ( $order->get_items() as $item_id => $item ) {
+      // iterating through each order items (getting product ID and the product object / work for simple and variable products)
+      foreach ( $order->get_items() as $item_id => $item ) {
 
-        if( $item['variation_id'] > 0 ){
-            $product_id = $item['variation_id']; // variable product
-        } else {
-            $product_id = $item['product_id']; // simple product
-        }
+          if( $item['variation_id'] > 0 ){
+              $product_id = $item['variation_id']; // variable product
+          } else {
+              $product_id = $item['product_id']; // simple product
+          }
 
-        // Get the product object
-        $product = wc_get_product( $product_id );
+          // Get the product object
+          $product = wc_get_product( $product_id );
 
-    }
+      }
 
-    // Ouptput some data
-    echo '<p>Order ID: '. $order_id . ' — Order Status: ' . $order->get_status() . ' — Order is paid: ' . $paid . '</p>';
+      // Ouptput some data
+      echo '<p>Order ID: '. $order_id . ' — Order Status: ' . $order->get_status() . ' — Order is paid: ' . $paid . '</p>';
     */
 }
 
@@ -219,7 +282,7 @@ function calcola_numero($numero, $lunghezza, $decimali) {
     return $numeroCalc;
 }
 
-function csv_txt_save() {
+function csv_txt_save($order_id) {
 
     error_log('Inizio esportazione ordine!');
 
@@ -232,7 +295,8 @@ function csv_txt_save() {
     // TXT EXPORT
     // -----------------------------------------
 
-    $filename = 'ordini-' . $domain . '-' . time() . '.txt';
+    //$filename = 'ordini-' . $domain . '-' . time() . '.txt';
+    $filename = $order_id . '.txt';
     $content = '';
 
     // get latest 1 order
@@ -253,6 +317,40 @@ function csv_txt_save() {
             if ( ! $_product->is_virtual() ) {
               if ( $_product->get_weight() ) {
                 $weight += $_product->get_weight() * $item['qty'];
+
+                // COLLI FINITI
+                // - box primo amore > 4,47 kg
+                // - bianchina da 24 > 9,25 kg
+                // - barattolo di latta > 12 = 1,0 kg / 6 = 0,74 kg
+                // - 6 bottiglie uguali (stesso prodotto) > 8 kg
+
+                // BOTTIGLIE
+                // il peso va calcolato solo se vengono acquistate le bottiglie
+                // peso di una bottiglia = ...
+                // peso di una latta = 1,2 kg
+                // media > 1,2 + 0,23 + 0,3 = 1,75 kg MEDIA PESO FINITO DI UNA BOTTIGLIA
+                // media > ... + 0,23 + 0,3 = .... kg MEDIA PESO FINITO DI UNA LATTA
+                // 1 bottiglia > 0,304 + 0,293 kg = 0,6 kg
+                // 2 bottiglie > 0,414 + (2 x 0,293) kg = 1,414 kg
+                // 3 bottiglie > 0,554 + (3 x 0.293) kg = 1,433 kg  
+
+                // 1 bottiglia > 1
+                // 2, 4 bottiglie > 2
+                // 3,6,9 bottiglie > 3
+                // 5 bottiglie > 2 + 3
+                // 7 bottiglie > 2 da 3 + 1
+                // 8 bottiglie > 2 da 3 + 2
+                // 10 bottiglie > 2 da 3 + 2 da 2
+
+                // if( $_product->get_name() == 'Gin Primo') {
+                //  $weight += 0.304;
+                //  if(sizeof( $order->get_items() % 2 != 0) {}
+                //  if(sizeof( $order->get_items() % 3 != 0) {}
+                // }
+                // if( $_product->get_name() == 'Barattolo di latta') {
+                //   $weight += 0.352;
+                // }
+
               }
             }
           }
