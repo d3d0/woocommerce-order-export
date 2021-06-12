@@ -166,7 +166,7 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
 
     // invio mail
     error_log( "### Invio mail > $order_id", 0 );
-    send_email_woocommerce_style('lorenzo.dedonato@gmail.com, strocchiveronica93@gmail.com, suprani.f@gmail.com', $ordine, $ordine, $messaggio, $order_id);
+    send_email_woocommerce_style('lostdedo@gmail.com, lorenzo.dedonato@gmail.com, strocchiveronica93@gmail.com, suprani.f@gmail.com', $ordine, $ordine, $messaggio, $order_id);
 }
 
 // -----------------------------------------
