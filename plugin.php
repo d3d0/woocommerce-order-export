@@ -73,6 +73,7 @@ function send_email_woocommerce_style($email, $subject, $heading, $message, $ord
   
   // Get file attachments
   $attachments = array( WP_CONTENT_DIR . '/plugins/woocommerce-order-export/tracciati/'. $order_id .'txt' );
+  error_log( "### Allegato > $attachments", 0 );
   
   // logistica@combitras.com
   $headers = array(
