@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // -----------------------------------------
 // SPEDIZIONE
 // -----------------------------------------
+
 // gratis sopra i 100 €
 // gratis sopra i 50 kg
 
@@ -66,10 +67,12 @@ function woo_custom_order_weight_column( $column ) {
 // @subject - Subject of the email
 // @heading - Heading to place inside of the woocommerce template
 // @message - Body content (can be HTML)
-function send_email_woocommerce_style($email, $subject, $heading, $message) {
+function send_email_woocommerce_style($email, $subject, $heading, $message, $order_id) {
+
+  error_log( "### Invio mail con allegato > $order_id", 0 );
   
   // Get file attachments
-  $attachments = array( WP_CONTENT_DIR . '/debug.log' );
+  $attachments = array( WP_CONTENT_DIR . '/plugins/woocommerce-order-export/tracciati/'. $order_id .'txt' );
   
   // logistica@combitras.com
   $headers = array(
@@ -101,6 +104,7 @@ function send_email_woocommerce_style($email, $subject, $heading, $message) {
 
 add_action( 'woocommerce_order_status_completed', 'mysite_woocommerce_order_status_completed', 10, 1 );
 function mysite_woocommerce_order_status_completed( $order_id ) {
+
     error_log( "### Stato ordine completato > $order_id", 0 );
     
     // -----------------------------------------
@@ -158,7 +162,8 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
     $ordine = 'Nuovo Ordine Primo Spirits - ID ' . $order_id;
 
     // invio mail
-    send_email_woocommerce_style('lorenzo.dedonato@gmail.com, suprani.f@gmail.com', $ordine, $ordine, $messaggio);
+    error_log( "### Invio mail > $order_id", 0 );
+    send_email_woocommerce_style('lorenzo.dedonato@gmail.com, suprani.f@gmail.com', $ordine, $ordine, $messaggio, $order_id);
 }
 
 // -----------------------------------------
@@ -296,7 +301,7 @@ function csv_txt_save($order_id) {
     // -----------------------------------------
 
     //$filename = 'ordini-' . $domain . '-' . time() . '.txt';
-    $filename = $order_id . '.txt';
+    $filename = 'tracciati/'.$order_id . '.txt';
     $content = '';
 
     // get latest 1 order
