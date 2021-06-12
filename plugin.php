@@ -81,6 +81,7 @@ function send_email_woocommerce_style($email, $subject, $heading, $message, $ord
     'Content-Type: text/html; charset=UTF-8',
     'From: Premiata Officina Lugaresi <info@premiataofficinalugaresi.com>'
   );
+  $headers = array('Content-Type: text/html; charset=UTF-8');
   
   // Get woocommerce mailer from instance
   $mailer = WC()->mailer();
