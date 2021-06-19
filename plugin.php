@@ -162,9 +162,10 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             
             if( $_product->is_type('simple')) { // No variations to product
                 $peso = $_product->get_weight();
-                error_log('### Prodotto semplice > PESO '.$peso);
+                error_log('### Prodotto semplice > PESO '.$peso); // OK
             }
             elseif( $_product->is_type('variable')) { // Product has variations
+                error_log('### Prodotto variabile');
                 $variations = $_product->get_available_variations();
                 foreach($variations as $variation) {
                     $variation_obj = wc_get_product($variation['variation_id']);
