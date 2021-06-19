@@ -176,6 +176,9 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
                 }
 
             }
+            elseif( $_product->has_child() ) { 
+                error_log('### Prodotto variabile 2');
+            }
 
             error_log('VARIABILE? '. $_product->is_type('variable'));
             error_log('### Prodotto');
