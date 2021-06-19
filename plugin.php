@@ -160,20 +160,26 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             $messaggio .= $item->get_name() . ' | '; // Get the item name (product name)
             $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
             
-            if( $_product->is_type('simple')) { // No variations to product
+            if( $_product->is_type('simple') ) { // No variations to product
                 $peso = $_product->get_weight();
                 error_log('### Prodotto semplice > PESO '.$peso); // OK
             }
-            elseif( $_product->is_type('variable')) { // Product has variations
+            elseif( $_product->is_type('variable') ) { // Product has variations
+                
                 error_log('### Prodotto variabile');
+
                 $variations = $_product->get_available_variations();
                 foreach($variations as $variation) {
                     $variation_obj = wc_get_product($variation['variation_id']);
                     $peso = $variation_obj->get_weight();
                     error_log('### Prodotto variabile > PESO '.$peso);
                 }
+
             }
+
+            error_log('VARIABILE? '. $_product->is_type('variable'));
             error_log('### Prodotto');
+
 					}
 				}
 			}
