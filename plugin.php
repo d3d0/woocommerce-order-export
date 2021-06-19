@@ -165,31 +165,11 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             $product = new WC_Product( $item['product_id'] );
             error_log('### Item > '.$item); // ??
             error_log('### Prodotto > '.$product); // ??
-
-            /*
-            if( $_product->is_type('simple') ) { // No variations to product
-                $peso = $_product->get_weight();
-                error_log('### Prodotto semplice > PESO '.$peso); // OK
-            }
-            elseif( $_product->is_type('variable') ) { // Product has variations
-                
-                error_log('### Prodotto variabile');
-
-                $variations = $_product->get_available_variations();
-                foreach($variations as $variation) {
-                    $variation_obj = wc_get_product($variation['variation_id']);
-                    $peso = $variation_obj->get_weight();
-                    error_log('### Prodotto variabile > PESO '.$peso);
-                }
-
-            }
-            elseif( $_product->has_child() ) { 
-                error_log('### Prodotto variabile 2');
-            }
-            elseif ( is_a( $_product, 'WC_Product_Variable' ) ) {
-                error_log('### Prodotto variabile 3');
-            }
-            */
+            
+            // Peso prodotto
+            $peso = $product->get_weight();
+            error_log('### Prodotto semplice > PESO '.$peso); // OK
+            $messaggio .= 'Peso: ' . $peso . PHP_EOL; // Get the item weight
 
             error_log('### Prodotto');
 
