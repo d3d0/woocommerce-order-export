@@ -179,7 +179,7 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             elseif( $_product->has_child() ) { 
                 error_log('### Prodotto variabile 2');
             }
-            elseif ( $_product->get_available_variations() ) {
+            elseif ( is_a( $_product, 'WC_Product_Variable' ) ) {
                 error_log('### Prodotto variabile 3');
             }
 
