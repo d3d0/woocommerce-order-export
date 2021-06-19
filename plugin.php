@@ -163,8 +163,8 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             
             // If you need a Product object for the above:
             $product = new WC_Product( $item['product_id'] );
-            error_log('### Item > '.$item); // ??
-            error_log('### Prodotto > '.$product); // ??
+            //error_log('### Item > '.$item); // OK
+            //error_log('### Prodotto > '.$product); // OK
             
             // Peso prodotto
             $peso = $product->get_weight();
