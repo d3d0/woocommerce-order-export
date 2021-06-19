@@ -153,11 +153,25 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
 				if ( $item['product_id'] > 0 ) {
 					$_product = $item->get_product();
 					if ( ! $_product->is_virtual() ) {
+            
             if ( $_product->get_name() ) {
-              $prodottoNome = $_product->get_name();
+                $prodottoNome = $_product->get_name();
             }
             $messaggio .= $item->get_name() . ' | '; // Get the item name (product name)
             $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
+            
+            if( $_product->is_type('simple')) { // No variations to product
+              error_log($peso);
+                error_log('### Prodotto semplice > '.$order_id);
+            }
+            elseif( $_product->is_type('variable')) { // Product has variations
+                $variations = $_product->get_available_variations();
+                foreach($variations as $variation) {
+                    $variation_obj = wc_get_product($variation['variation_id']);
+                    $peso = $variation_obj->get_weight();
+                    error_log('### Prodotto variabile > PESO '.$peso);
+                }
+            }
 					}
 				}
 			}
