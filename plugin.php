@@ -167,9 +167,13 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             //error_log('### Prodotto > '.$product); // OK
             
             // Peso prodotto
-            $peso = $product->get_weight();
+            $peso = $product->get_weight() / 1000;
             error_log('### Prodotto semplice > PESO '.$peso); // OK
             $messaggio .= 'Peso: ' . $peso . PHP_EOL; // Get the item weight
+
+            $peso1 = $_product->get_weight();
+            error_log('### Prodotto semplice > PESO1 '.$peso1); // OK
+            $messaggio .= 'Peso1: ' . $peso1 . PHP_EOL; // Get the item weight
 
             error_log('### Prodotto');
 
