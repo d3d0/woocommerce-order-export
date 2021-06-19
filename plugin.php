@@ -162,7 +162,8 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             // $messaggio .= 'Peso: ' . $_product->get_weight() . PHP_EOL; // Get the item weight
             
             // If you need a Product object for the above:
-            $product = new WC_Product( $_product->get_id() );
+            $product = new WC_Product( $item['product_id'] );
+            error_log('### Item > '.$item); // ??
             error_log('### Prodotto > '.$product); // ??
 
             /*
@@ -189,7 +190,7 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
                 error_log('### Prodotto variabile 3');
             }
             */
-            
+
             error_log('### Prodotto');
 
 					}
