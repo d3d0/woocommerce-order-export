@@ -160,6 +160,11 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             $messaggio .= $item->get_name() . ' | '; // Get the item name (product name)
             $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
             
+            // If you need a Product object for the above:
+            $product = new WC_Product( $_product->get_id() );
+            error_log('### Prodotto > '.$product); // ??
+
+
             if( $_product->is_type('simple') ) { // No variations to product
                 $peso = $_product->get_weight();
                 error_log('### Prodotto semplice > PESO '.$peso); // OK
@@ -183,7 +188,6 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
                 error_log('### Prodotto variabile 3');
             }
 
-            error_log('VARIABILE? '. $_product->is_type('variable'));
             error_log('### Prodotto');
 
 					}
