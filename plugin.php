@@ -159,6 +159,7 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             }
             $messaggio .= $item->get_name() . ' | '; // Get the item name (product name)
             $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
+            $messaggio .= 'Peso: ' . $item->get_weight() . PHP_EOL; // Get the item weight
             
             // If you need a Product object for the above:
             $product = new WC_Product( $_product->get_id() );
