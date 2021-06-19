@@ -161,21 +161,19 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
             $messaggio .= 'Quantità: ' . $item->get_quantity() . PHP_EOL; // Get the item quantity
             // $messaggio .= 'Peso: ' . $_product->get_weight() . PHP_EOL; // Get the item weight
             
-            // If you need a Product object for the above:
-            $product = new WC_Product( $item['product_id'] );
-            //error_log('### Item > '.$item); // OK
-            //error_log('### Prodotto > '.$product); // OK
-            
             // Peso prodotto
+            /*
+            $product = new WC_Product( $item['product_id'] );
+            error_log('### Item > '.$item); // OK
+            error_log('### Prodotto > '.$product); // OK
             $peso = $product->get_weight() / 1000;
             error_log('### Prodotto semplice > PESO '.$peso); // OK
             $messaggio .= 'Peso: ' . $peso . PHP_EOL; // Get the item weight
+            */
 
             $peso1 = $_product->get_weight();
-            error_log('### Prodotto semplice > PESO1 '.$peso1); // OK
-            $messaggio .= 'Peso1: ' . $peso1 . PHP_EOL; // Get the item weight
-
-            error_log('### Prodotto');
+            error_log('### Prodotto semplice > PESO '.$peso1); // OK
+            $messaggio .= 'Peso: ' . $peso1 . PHP_EOL; // Get the item weight
 
 					}
 				}
