@@ -287,12 +287,11 @@ function calcola_numero($numero, $lunghezza, $decimali) {
     // calcolo frazione
     $numFractionTemp = $numero - $numWhole; // .00
     $numFractionTemp = round($numFractionTemp,2,PHP_ROUND_HALF_UP); // arrotondo al secondo decimale per eccesso
-    // TODO 
-    /*
+    
+    // 1 decimale
     if($decimali == 1) {
-      $numFractionTemp = round($numFractionTemp,2,PHP_ROUND_HALF_UP); // arrotondo al primo decimale per eccesso
+      $numFractionTemp = round($numFractionTemp,1,PHP_ROUND_HALF_UP); // arrotondo al primo decimale per eccesso
     }
-    */
 
     error_log('frazione inizio'.$numFractionTemp);
     $numFractionTemp = str_replace("0.","",$numFractionTemp); // pulisco il zero punto (0.) dai decimali
