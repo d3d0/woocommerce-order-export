@@ -191,6 +191,8 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
     error_log( "### Invio mail > $order_id", 0 );
     send_email_woocommerce_style('info@premiataofficinalugaresi.com', $ordine, $ordine, $messaggio, $order_id);
     send_email_woocommerce_style('francesca@loool.com', $ordine, $ordine, $messaggio, $order_id);
+
+
 }
 
 // -----------------------------------------
