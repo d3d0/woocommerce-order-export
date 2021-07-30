@@ -63,6 +63,10 @@ function woo_custom_order_weight_column( $column ) {
 // SEND MAIL FUNCTION
 // -----------------------------------------
 
+// TODO
+// pacchetti > logistica@combitras.com
+// tracciato > info@combitras.com
+
 // @email   - Email address of the receiver
 // @subject - Subject of the email
 // @heading - Heading to place inside of the woocommerce template
@@ -185,7 +189,7 @@ function mysite_woocommerce_order_status_completed( $order_id ) {
 
     // invio mail
     error_log( "### Invio mail > $order_id", 0 );
-    send_email_woocommerce_style('info@premiataofficinalugaresi.com', $ordine, $ordine, $messaggio, $order_id);
+    send_email_woocommerce_style('info@premiataofficinalugaresi.com, francesca@loool.com', $ordine, $ordine, $messaggio, $order_id);
 }
 
 // -----------------------------------------
